@@ -1,0 +1,6 @@
+services:
+  solana-agent-kit:
+    image: solana-agent-kit:latest
+    ports:
+      - "8000:8000"
+    restart: unless-stopped 
