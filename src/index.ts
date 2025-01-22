@@ -12,7 +12,7 @@ app.use(express.json());
 
 // check if agent is initialized
 const checkInitialization = (_req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if (!isInitialized) {
+    if (!agentInstance) {
         return res.status(400).json({ 
             error: 'Agent not initialized. Please call /init endpoint first' 
         });
@@ -49,11 +49,10 @@ async function initializeAgent(modelName: string = "gpt-4o-mini", temperature: n
     return { agent, config };
 }
 
-let isInitialized = false;
 let agentInstance: any = null;
 
 app.post('/init', async (req, res) => {
-    if (isInitialized) {
+    if (agentInstance) {
         return res.status(400).json({ error: 'Agent is already initialized' });
     }
 
@@ -97,9 +96,7 @@ app.post('/init', async (req, res) => {
         process.env.SOLANA_PUBLIC_KEY = walletAddress;
 
         // Initialize agent after all environment variables are set
-        const tempInstance = await initializeAgent(llm.modelName, llm.temperature);
-        agentInstance = tempInstance;
-        isInitialized = true;
+        agentInstance = await initializeAgent(llm.modelName, llm.temperature);
         
         res.json({ 
             message: 'Agent initialized successfully',
