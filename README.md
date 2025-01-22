@@ -86,12 +86,12 @@ Upload the generated `result/image.eif` to a remote file server that's accessibl
 
 ### 4. Deploy to Marlin Hub
 ```bash
-cargo run -- deploy \
+oyster-cvm -- deploy \
     --image-url <image-url> \
     --region ap-south-1 \
     --wallet-private-key <wallet-secret> \
     --instance-type c6a.xlarge \
-    --operator 0xe10fa12f580e660ecd593ea4119cebc90509d642 \
+    --operator {operator-addr} \
     --duration-in-minutes 60 \
     --bandwidth 100
 ```
