@@ -1,23 +1,20 @@
-# Use Node.js LTS (Latest LTS version)
-FROM node:18-slim
-
-# Create app directory
+# Build stage
+FROM node:18-slim AS builder
 WORKDIR /usr/src/app
-
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy source code
+RUN npm ci
 COPY . .
-
-# Build TypeScript
 RUN npm run build
 
-# Expose port
-EXPOSE 8000
+# Production stage
+FROM node:18-alpine3.19
+RUN apk --no-cache add ca-certificates
+WORKDIR /usr/src/app
 
-# Start the server
-CMD [ "node", "dist/index.js" ]
+COPY --from=builder /usr/src/app/dist ./dist
+COPY package*.json ./
+RUN npm ci --omit=dev --omit=optional
+
+USER node
+EXPOSE 8000
+CMD ["node", "dist/index.js"]
