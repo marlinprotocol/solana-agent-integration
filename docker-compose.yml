@@ -1,6 +1,5 @@
 services:
   solana-agent-kit:
     image: solana-agent-kit:latest
-    ports:
-      - "8000:8000"
+    network_mode: "host"
     restart: unless-stopped 
