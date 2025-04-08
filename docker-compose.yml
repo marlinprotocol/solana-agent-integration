@@ -1,5 +1,5 @@
 services:
   solana-agent-kit:
-    image: solana-agent-kit:latest
+    image: <username>/solana-agent-kit:latest
     network_mode: "host"
     restart: unless-stopped 

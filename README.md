@@ -4,7 +4,7 @@ A server that initializes and manages a Solana Agent for onchain interactions us
 
 ## Features
 - Dynamic agent initialization with configurable LLM parameters
-- Secure wallet generation and management
+- Secure wallet key derivation from kms derive server
 - Real-time chat interface with the agent
 - Wallet address retrieval endpoint
 
@@ -70,30 +70,19 @@ npm run dev
 
 ## Package & Deploy
 
-### 1. Create Docker Image
+### 1. Create and push the docker image to docker hub. Replace with your username.
 ```bash
-docker build -t solana-agent-kit:latest .
-docker save solana-agent-kit:latest -o solana-agent-kit.tar
+docker build -t <username>/solana-agent-kit:latest .
+docker push <username>/solana-agent-kit:latest
 ```
 
-### 2. Build Oyster-CVM Image
-```bash
-oyster-cvm build --platform amd64 --docker-compose ./docker-compose.yml --docker-images ./solana-agent-kit.tar
-```
-
-### 3. Upload Image
-Upload the generated `result/image.eif` to a remote file server that's accessible via HTTP/HTTPS.
-
-### 4. Deploy to Marlin Hub
+### 2. Deploy to Marlin Hub
 ```bash
 oyster-cvm -- deploy \
-    --image-url <image-url> \
-    --region ap-south-1 \
+    --region us-west-1 \
     --wallet-private-key <wallet-secret> \
-    --instance-type c6a.xlarge \
-    --operator {operator-addr} \
     --duration-in-minutes 60 \
-    --bandwidth 100
+    --docker-compose ./docker-compose.yml
 ```
 
 ## Environment Variables
@@ -101,5 +90,23 @@ oyster-cvm -- deploy \
 The following variables are set automatically during initialization:
 - `OPENAI_API_KEY`: OpenAI API key for LLM interactions
 - `RPC_URL`: Solana RPC URL for blockchain interactions
-- `SOLANA_PRIVATE_KEY`: Generated wallet's private key (base58 encoded)
-- `SOLANA_PUBLIC_KEY`: Generated wallet's public key (base58 encoded)
+- `SOLANA_PRIVATE_KEY`: Wallet's private key derived from the local server (base58 encoded)
+- `SOLANA_PUBLIC_KEY`: Wallet's public key (base58 encoded)
+
+## Key Derivation
+Instead of generating random keys, this server uses a deterministic key derivation approach:
+1. The server fetches an Ed25519 private key from a localhost derive server
+2. The key is requested with a specific path parameter (`signing-server`)
+3. Solana's `Keypair.fromSeed()` creates a keypair from the 32-byte private key
+4. This approach ensures consistent key generation across server restarts
+
+## Wallet Persistence
+The wallet secret key is persistent across deployments -- even if you stop / redeploy your instance, as long as it's the same code -- the wallet will be the same. This feature enables:
+
+- Secure, as only the ai agent can access the private key when run inside the Oyster CVM
+- Consistent identity for your AI agent on-chain
+- Ability to keep funds in the same wallet across deployments
+- No need to re-fund or re-authorize a new wallet when restarting
+- Seamless continuity of operations for long-running AI agents
+
+This persistent identity makes AI agents all the more practical on Oyster TEE, enabling autonomous on-chain agents with stable, long-term blockchain identities.

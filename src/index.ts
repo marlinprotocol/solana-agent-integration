@@ -85,8 +85,13 @@ app.post('/init', async (req, res) => {
     }
 
     try {
-        // Generate new Solana keypair
-        const keypair = Keypair.generate();
+        // Get Ed25519 private key from localhost derive server
+        const response = await fetch("http://127.0.0.1:1100/derive/ed25519?path=signing-server");
+        const arrayBuffer = await response.arrayBuffer();
+        const privateKey = new Uint8Array(arrayBuffer);
+
+        // Use the private key to create a Solana keypair
+        const keypair = Keypair.fromSeed(privateKey.slice(0, 32));
         const walletAddress = keypair.publicKey.toBase58();
         
         // Set all environment variables before initialization
